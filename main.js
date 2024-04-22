@@ -5,7 +5,6 @@ const app = express();
 const port = 4000;
 const hostAPI = 'https://track.weship.com'
 
-var TOKEN = ''
 app.use(CORS({
     origin: 'http://localhost:3000', // Permitir solicitudes solo desde este origen
     methods: ['GET', 'POST'], // Permitir solo los métodos GET y POST
@@ -14,14 +13,15 @@ app.use(express.json());
 
 app.get('/api/v1/shipment/list', async (req, res) => {
     console.log('get list');
-    var rowsList = await getListShipments('')
-    console.log(rowsList);
+    var token = req.headers.weship
+    var query = req.headers.query
+    var rowsList = await getListShipments(query, token)
     res.json(rowsList)
 });
 
 app.post('/api/v1/shipment/tracking-number', async (req,res)=>{
     var datosPOST = req.body
-    console.log(datosPOST);
+    var token = req.headers.weship
     var shipments ={
         shipments: [
             {
@@ -30,7 +30,7 @@ app.post('/api/v1/shipment/tracking-number', async (req,res)=>{
             }
         ]
     }
-    var details = await getDetailsTrackingNumber(shipments)
+    var details = await getDetailsTrackingNumber(shipments,token)
     res.json(details)
 })
 
@@ -77,11 +77,11 @@ async function loginToWeShips(dataLogin) {
     
 }
 
-async function getListShipments(query) {
-    var url ='https://track.weship.com/api/v1/shipment/list'
+async function getListShipments(query, token) {
+    var url =`https://track.weship.com/api/v1/shipment/list${query != '' ? '?'+query : ''}`
     var config = {
         headers:{
-            Authorization: 'Bearer '+TOKEN,
+            Authorization: 'Bearer '+token,
             "Weship-API-Version": '1.0'
         }
     }
@@ -100,18 +100,17 @@ async function getListShipments(query) {
     }
 }
 
-async function getDetailsTrackingNumber(shipment) {
+async function getDetailsTrackingNumber(shipment,token) {
     var url ='https://track.weship.com/api/v1/tracking/getStatus'
     var config = {
         headers:{
-            Authorization: 'Bearer '+TOKEN,
+            Authorization: 'Bearer '+token,
             "Content-Type": 'application/json', 
             "Weship-API-Version": '1.0'
         }
     }
     try {
         var result = await axios.post(url,shipment,config)
-        console.log(result);
         var resultShipment = {
             success: result.data.success,
             data: result.data.data
