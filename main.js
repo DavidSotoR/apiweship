@@ -16,6 +16,10 @@ app.get('/api/v1/shipment/list', async (req, res) => {
     var token = req.headers.weship
     var query = req.headers.query
     var rowsList = await getListShipments(query, token)
+    console.log(rowsList);
+    if(!rowsList){
+        res.json({ count: 0, data:[] })
+    }
     res.json(rowsList)
 });
 
@@ -40,7 +44,6 @@ app.post('/api/login',async (req, res)=>{
     var weship
     try {
         weship = await loginToWeShips(credencial)
-        TOKEN = weship.token
     } catch (error) {
         weship = error
 
